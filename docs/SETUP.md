@@ -1,6 +1,6 @@
 # Windows setup and calibration
 
-**Current state: implemented; read-only discovery, enrollment, status, diagnose and dry-run verified on the target PC. Do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
+**Current state: all steps below completed on the target PC on 12 November 2026; the button is bound to the installed copy in `%LOCALAPPDATA%\MonitorSwitch\bin`. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
 
 All examples run from the repository root in PowerShell 7+. MonitorSwitch is a WinExe, so collect exit codes with `Start-Process -Wait -PassThru`.
 

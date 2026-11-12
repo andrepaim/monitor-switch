@@ -2,7 +2,7 @@
 
 ## Scope and provenance
 
-The 11 November 2026 hardware findings in [design §2](DESIGN-v1.1.md#2-prior-environment-evidence-and-revalidation) were supplied in the proposal. They have not been reproduced by this repository. The current work runs on a Linux x86_64 development host; no Windows monitor, Options+, Deskflow or mouse settings were accessed.
+The 11 November 2026 hardware findings in [design §2](DESIGN-v1.1.md#2-prior-environment-evidence-and-revalidation) were supplied in the proposal. The scaffold checks below ran on a Linux development host; every later section ran on the target Windows PC.
 
 ## Scaffold checks — 12 November 2026
 
