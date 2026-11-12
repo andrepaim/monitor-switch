@@ -11,14 +11,14 @@ Actual local build/test evidence is recorded below after verification. These che
 | Check | Evidence |
 | --- | --- |
 | Design written first | `docs/DESIGN-v1.1.md` created before Git initialization and scaffold files |
-| Git | Standalone local repository, branch `main`; no remote configured |
+| Git | Standalone repository, branch `main`; initially created without a remote |
 | SDK | Temporary Linux SDK 10.0.404 under `/tmp/monitor-switch-dotnet-sdk` |
 | Restore | `dotnet restore MonitorSwitch.slnx` succeeded for all six projects |
 | Release build | `dotnet build MonitorSwitch.slnx -c Release --no-restore` passed; 0 warnings, 0 errors |
 | Tests | `dotnet test MonitorSwitch.slnx -c Release --no-build` passed: 29 passed, 0 failed, 0 skipped |
 | Windows packaging | Main app and probe cross-published with `-r win-x64 --self-contained true -p:DebugType=None -p:DebugSymbols=false` into separate ignored artifact folders |
 | Executable format | Both apphosts inspected as PE32+ GUI executables, Windows x86-64 |
-| PowerShell scripts / hosted CI | Provided, not executed here; PowerShell is unavailable on this host and no remote repository exists |
+| PowerShell scripts / hosted CI | Provided; PowerShell scripts have not been executed here because PowerShell is unavailable on this host. Hosted CI results must be checked separately. |
 
 Development package hashes (not installed or run on Windows):
 

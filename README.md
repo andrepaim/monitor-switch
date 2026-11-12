@@ -18,6 +18,13 @@ The main executable returns **21 (NotImplemented)** for all valid monitor comman
 
 ## Build and test
 
+To continue development on Windows, clone the public repository from PowerShell:
+
+```powershell
+git clone https://github.com/andrepaim/monitor-switch.git
+Set-Location monitor-switch
+```
+
 Install a supported .NET 10 SDK. From the repository root:
 
 ```powershell
@@ -52,4 +59,4 @@ This publishes separate self-contained app/probe folders under `artifacts` and r
 
 Continue with [implementation milestones](docs/IMPLEMENTATION.md). Record measured results in [acceptance](docs/ACCEPTANCE.md). Restore settings and remove only app-owned files using [rollback](docs/ROLLBACK.md).
 
-No license has been selected. No remote repository, publication, installation, service, mouse assignment, or Deskflow change is part of this scaffold.
+No license has been selected. The source is published at https://github.com/andrepaim/monitor-switch. No installation, service, mouse assignment, or Deskflow change is part of this scaffold.
