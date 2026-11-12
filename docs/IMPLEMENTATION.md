@@ -41,8 +41,8 @@ Checked items exist in this repository; unchecked items remain work, not implici
 - [x] Fresh-process inactive-source rediscovery and restore gate.
 - [x] Show selected button and prior assignment; preserve rollback evidence (round button by the wheel; prior: Task View).
 - [x] Probe matrix across image states and long-hold behavior (owner does not use Deskflow).
-- [ ] Real helper lifecycle tests while verifying/blocked; no foreground action or queue.
-- [ ] All hardware acceptance checks from the design, including ten round trips.
+- [x] Real helper lifecycle tests while verifying/blocked; no foreground action or queue.
+- [x] Ten round trips, busy/debounce presses and manual-OSD follow-up (sleep/resume, reconnect and laptop-asleep checks still open).
 - [ ] Approved per-user installation and exact rollback demonstration.
 
 Native code is exercised only in supervised Windows sessions; automated tests use fakes. A blocked native DDC call cannot be cancelled: the process keeps the lock until it returns or is terminated, and the next launch reconciles.
