@@ -104,7 +104,9 @@ config.json
 state.json
 last-result.json
 logs\YYYY-MM-DD[.sequence].jsonl
-logs\trigger-probe.jsonl
+config.previous.json
+operation.lock
+logs\trigger-probe-YYYY-MM-DD[.sequence].jsonl
 ```
 
 ```json
@@ -153,6 +155,8 @@ Interop uses pointer-width-safe handles, Windows BOOL marshaling, Unicode fixed-
 All commands using native monitor access coordinate through the same nonblocking exclusive lock. Busy requests never queue. Read-only commands may return Busy; they must not reconcile/clear pending state, change cooldown, or overwrite the active writer's authoritative state. Reports use unique temporary files; requested outputs must not alias config/state/log files.
 
 The lock must cover every process that can access the same per-user state. A `Local\MonitorSwitch-<user-id-hash>` mutex is session scoped: enforce one participating interactive session or use a reviewed cross-session lock. An abandoned lock requires reading durable state before any new write. Named mutex ownership is thread-affine; do not release from an unrelated continuation thread.
+
+Implementation decision: the lock is an exclusive (`FileShare.None`), nonblocking open of `%LOCALAPPDATA%\MonitorSwitch\operation.lock`. It covers every session sharing that directory, has no thread affinity, and the OS releases it if the process dies; the next holder always reads `state.json` before any write.
 
 `state.json` is the single authoritative atomic document: schema, enrolled identity (device path and EDID hash, matching config; a mismatch fails closed), pending operation, last completed outcome, and boot-aware monotonic cooldown metadata. Logs and last-result are derived reports, not recovery authority. Missing state at first use is allowed; corrupt existing state fails closed. A reboot/clock correction must not create infinite cooldown. Pending state survives reboot and app restart.
 

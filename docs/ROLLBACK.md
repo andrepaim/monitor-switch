@@ -2,7 +2,7 @@
 
 The scaffold does not install or bind anything. Creating/building it does not require resetting the mouse, monitor, display settings or Deskflow.
 
-If the development probe was run manually, it created only `%LOCALAPPDATA%\MonitorSwitch\logs\trigger-probe.jsonl` and parent directories. After confirming the probe has exited, optionally remove that file. Do not remove an existing app directory if it contains other work or evidence you want to retain.
+If the development probe was run manually, it created only `%LOCALAPPDATA%\MonitorSwitch\logs\trigger-probe-*.jsonl` and parent directories. After confirming the probe has exited, optionally remove that file. Do not remove an existing app directory if it contains other work or evidence you want to retain.
 
 For a later approved setup:
 

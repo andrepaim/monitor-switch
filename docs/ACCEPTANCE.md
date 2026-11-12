@@ -29,21 +29,50 @@ Development package hashes (not installed or run on Windows):
 
 SHA-256 manifests for every file in each folder are stored alongside the ignored packages. These are folder deployments; an apphost alone is not the complete package. The main package is intentionally nonfunctional for monitor commands. Native discovery, command report writing, full probe retention, and Windows runtime behavior remain pending.
 
-## Full application acceptance — all pending
+## Implementation and read-only hardware checks — 12 November 2026
+
+Run on the target Windows PC by the implementing agent. No monitor writes, button assignments or Deskflow changes were made.
+
+| Check | Evidence |
+| --- | --- |
+| Host | Windows 11 Pro 10.0.26300, x64; NVIDIA GeForce RTX 3060; .NET SDK 10.0.404 |
+| Build/tests | `scripts\Build.ps1`: 0 warnings, 0 errors; 129 passed, 0 failed |
+| Package | `artifacts\win-x64\app\MonitorSwitch.exe` SHA-256 `390f862419cb3c103e4fef9b0e8852f0bea440d0a92a3d90c41d89a613beedd9` (development, unsigned) |
+| Probe package | `artifacts\win-x64\probe\MonitorSwitch.TriggerProbe.exe` SHA-256 `11f51f1b2d27ffa90ad6ef645c099e6f0c40c4d1dc3f0bf8a680efc9a77c472b` |
+| `discover` | Exit 0. One active target: SAM / SAM1017 "LU28R55" on `\\.\DISPLAY1`; EDID valid; 1 physical monitor; 1 target on source; VCP 0x60 read 5 |
+| `enroll` | Exit 0. Enrolled the discovered path and EDID hash `e950ed17…a1c42` (full values in local config only) |
+| `status` | Exit 0. Current input 5 ("Input 5"); no state, no pending |
+| `diagnose` | Exit 0 in ~2.0 s. Capabilities (advisory) include `60(01 03)`, `mccs_ver(2.0)`, matching the prior report |
+| `toggle --dry-run` | Exit 0 in ~0.44 s launch-to-exit (109 ms internal). Planned 5 → 6; no write; no `state.json` created |
+
+## Supervised native switch and fresh-process gate — 12 November 2026
+
+Same host and package hash as above. Owner present and watching the monitor; physical input button available for recovery.
+
+| Step | Native evidence | Owner-confirmed image |
+| --- | --- | --- |
+| `set --input 6` (process A) | Exit 0, Confirmed: read 5, one `SetVCPFeature` accepted, readback 6; 1062 ms internal, 1.3 s wall | Laptop image |
+| Process A exited | Zero MonitorSwitch processes alive; all physical handles released | Laptop image held ~10 s |
+| `set --input 5` (new process B, laptop input selected) | Exit 0, Confirmed: fresh discovery found the enrolled identity, read 6, one write accepted, readback 5; 1094 ms internal, 1.2 s wall | PC image restored, no manual intervention |
+| Final state | `state.json` pending null, last outcome Confirmed | — |
+
+Calibration: on this cable/GPU configuration, **input 5 = PC** and **input 6 = laptop**. The PC's display path stayed active while the laptop input was shown, so fresh-process rediscovery works. Owner's words: "It worked perfectly."
+
+## Full application acceptance
 
 | Item | Status | Evidence needed |
 | --- | --- | --- |
-| Configuration/state/orchestrator/native backend | Not implemented | Unit and fake-backend suite, interruption/disposal evidence |
-| Actual Windows architecture/software/devices | Not revalidated | Date, OS/architecture, Options+/Deskflow versions, identity/cable/GPU route |
-| Read-only published diagnostics | Not run | Binary SHA-256 and structured output |
-| Supervised native PC→laptop→PC | Not run | API readbacks and owner-confirmed images |
-| Fresh-process inactive-source gate | Not run | Old process exited, handles released, new discovery/read/restore |
-| Prior LIFT assignment and selected button | Not inspected | Screenshot/plain text and owner choice |
-| Probe matrix | Not run | Ten presses/ten executions in each relevant focus/image state |
-| Long hold and rapid presses | Not run | No held repeat, oscillation, forwarding or delayed queue |
+| Configuration/state/orchestrator/native backend | Implemented; fake-backend suite passes | Hardware evidence below |
+| Actual Windows architecture/devices | Revalidated (above). Logi Options+ 1.93.755983, Logi Plugin Service 6.1.5.22697, Deskflow 1.27.0.0, all running | Mouse pairing and cable/GPU route still to record |
+| Read-only published diagnostics | Passed (above) | — |
+| Supervised native PC→laptop→PC | **Passed** 12 Nov 2026 | See section above |
+| Fresh-process inactive-source gate | **Passed** 12 Nov 2026 | See section above |
+| Prior LIFT assignment and selected button | Owner chose the small round button next to the scroll wheel (not Forward), assigned in All Applications. Prior assignment: Windows Task View ("Exibição de tarefas"); restore this on rollback | Any app-specific overrides |
+| Probe matrix | Binding works (12 Nov 2026): owner bound the probe through Options+ UI; 3 launches logged at 15:43:35–15:43:38 UTC, separate PIDs, none left running. Press count not recorded, so exactly-once is not yet shown. **Batch A passed** (monitor PC, Deskflow focus PC): 10 counted presses → 10 log lines, 10 distinct PIDs, gaps 1.49–1.82 s, no Task View, no window or focus change, nothing left running. **Batch C passed** (monitor showing laptop via physical button): 10 presses → 10 log lines, 10 distinct PIDs, gaps 1.32–1.49 s, nothing left running | **Passed** for the owner's setup. Owner does not use Deskflow (installed and running, left unchanged); the MacBook uses its own touchpad, so Deskflow focus states B and D do not apply |
+| Long hold and rapid presses | **Passed** 12 Nov 2026: ~3 s hold → exactly 1 launch, no repeat; 5 fast clicks → 5 launches 0.27–0.36 s apart, distinct PIDs, no Task View, no delayed queue, nothing left running | — |
 | Real helper verification/busy lifecycle | Not run | No foreground activation, launch queue or broken later presses |
 | Desktop/browser/editor profiles | Not run | Actual override behavior |
-| Ten complete round trips | Not run | Readbacks/images, no orphan or unrelated-target writes |
+| Ten complete round trips | 1 of 10 (12 Nov 2026): button bound to the repo `artifacts` app exe; toggle 5→6 Confirmed (1094 ms) then 6→5 Confirmed (1093 ms), owner: "All worked perfectly" | Readbacks/images, no orphan or unrelated-target writes |
 | Physical OSD / reconnect / sleep/resume | Not run | Actual-state handling, identity safety and recovery |
 | Laptop asleep / app missing / Options+ stopped | Not run | Clear limits and safe recovery |
 | Installation and rollback | Not run | Package path/hash, restored assignment, unchanged Deskflow |

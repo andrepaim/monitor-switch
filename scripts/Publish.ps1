@@ -34,7 +34,7 @@ try {
         Write-Output "Development package: $publishDirectory"
         Write-Output "SHA-256 manifest: $manifestPath"
     }
-    Write-Output 'Scaffold only: monitor commands return exit 21. Nothing was installed or bound.'
+    Write-Output 'Development package only. Nothing was installed, enrolled or bound.'
 }
 finally {
     Pop-Location

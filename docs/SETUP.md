@@ -1,44 +1,95 @@
 # Windows setup and calibration
 
-**Current state: scaffold only. Do not bind the main executable as a finished switch.** Monitor commands currently return exit 21 and do not emit structured result files. The example config contains placeholders and is not enrollment.
+**Current state: implemented; read-only discovery, enrollment, status, diagnose and dry-run verified on the target PC. Do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
 
-## Development build
-
-Use .NET 10 SDK and PowerShell 7+ for scripts. Build/test as described in the README. Inspect the Windows OS and architecture before selecting the publish runtime:
+All examples run from the repository root in PowerShell 7+. MonitorSwitch is a WinExe, so collect exit codes with `Start-Process -Wait -PassThru`.
 
 ```powershell
-[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+$exe = (Resolve-Path .\artifacts\win-x64\app\MonitorSwitch.exe).Path
+function Invoke-MonitorSwitch { (Start-Process -FilePath $exe -ArgumentList $args -Wait -PassThru).ExitCode }
+```
+
+## 1. Build and package
+
+```powershell
+[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture   # X64 on this PC
 .\scripts\Publish.ps1 -Runtime win-x64
 ```
 
-Use `win-arm64` instead if verified appropriate. The script produces a self-contained folder for each executable; copy the whole folder when testing. No runtime installation is required on the eventual target. A single-file package is optional future packaging work.
+Copy the whole folder when testing; an apphost alone is not the package.
 
-## Harmless probe (implemented development utility)
+## 2. Read-only discovery and explicit enrollment
 
-Manual Windows check, from the repository root after publishing:
+```powershell
+Invoke-MonitorSwitch discover --json --output "$env:TEMP\ms-discover.json"
+Get-Content "$env:TEMP\ms-discover.json"
+```
+
+Check there is exactly one `SAM1017` candidate with `problem: null`. Enroll by copying its exact `deviceInterfacePath` and `edidIdentityHash` (quote the path; it contains `&`):
+
+```powershell
+Invoke-MonitorSwitch enroll --device-path '"<deviceInterfacePath>"' --edid-hash <edidIdentityHash>
+Get-Content "$env:LOCALAPPDATA\MonitorSwitch\last-result.json"
+```
+
+Re-enrollment needs `--replace`, refuses while a pending operation exists, and backs up the old config to `config.previous.json`. Never copy `config.example.json` as enrollment.
+
+Confirm read-only behavior before any write:
+
+```powershell
+Invoke-MonitorSwitch status --output "$env:TEMP\ms-status.json"
+Invoke-MonitorSwitch toggle --dry-run      # plans only; see last-result.json
+```
+
+## 3. Supervised physical switch (owner present)
+
+Recovery path: the monitor's own input button/OSD. Note the current image and input first. Labels are cosmetic; record which physical source (PC or laptop) each value shows.
+
+```powershell
+Invoke-MonitorSwitch set --input 6   # expect laptop image; exit 0 = target read back
+Get-Content "$env:LOCALAPPDATA\MonitorSwitch\last-result.json"
+Invoke-MonitorSwitch set --input 5   # expect PC image
+```
+
+Record exit code, `before/target/observed`, `write.apiAccepted`, elapsed time, and what the owner actually sees. API acceptance is not visual success.
+
+## 4. Fresh-process inactive-source gate
+
+With input 6 (laptop) selected by step 3 and that process exited, every handle has been released. A new launch must rediscover the monitor and restore the PC:
+
+```powershell
+Get-Process MonitorSwitch -ErrorAction SilentlyContinue   # must be empty
+Invoke-MonitorSwitch set --input 6
+Get-Process MonitorSwitch -ErrorAction SilentlyContinue   # must be empty
+Invoke-MonitorSwitch toggle                               # new process: expect PC image, exit 0
+```
+
+If discovery fails while the laptop input is shown (exit 11), the PC's display path disappeared: record it and follow design §10. Do not add a resident handle keeper.
+
+## 5. Harmless probe and button selection
 
 ```powershell
 $probeExe = (Resolve-Path .\artifacts\win-x64\probe\MonitorSwitch.TriggerProbe.exe).Path
-$probeProcess = Start-Process -FilePath $probeExe -Wait -PassThru
-$probeProcess.ExitCode
-Get-Content "$env:LOCALAPPDATA\MonitorSwitch\logs\trigger-probe.jsonl" -Tail 10
+(Start-Process -FilePath $probeExe -Wait -PassThru).ExitCode
+Get-Content "$env:LOCALAPPDATA\MonitorSwitch\logs\trigger-probe-$((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')).jsonl" -Tail 10
 ```
 
-The probe only writes timestamp/PID/version/outcome records; it does not touch DDC, config, switching state or Deskflow. Exit 0 means an entry was flushed; 20 means local logging failed; the dedicated probe rejects arguments with 10. Log rotation/retention is not yet implemented: remove test logs explicitly if no longer needed. Do not treat successful manual execution as proof of Options+/Deskflow integration.
+Exit 0 means an entry was flushed, 20 means local logging failed, 10 means arguments were passed. Logs rotate at 1 MB and are kept seven days.
 
-## Later implementation setup (pending)
+1. Recheck mouse pairing, Options+/Deskflow versions and roles, and app-specific profiles.
+2. Show the actual LIFT button diagram and existing assignment. Propose Forward; confirm the owner's choice before changing it. Save a screenshot/plain-text record and any supported export outside Git.
+3. Through supported Options+ UI, assign the probe executable's absolute path in All Applications (Open Application/Open File, else Smart Action → Application Open). Do not silently create/sign into an account or modify private databases.
+4. Run ten separated presses in every design §8 state, desktop/browser/editor checks, rapid presses and a long hold. Count log lines; verify no duplicates, repeats while held, Back/Forward forwarding or focus change.
 
-1. Recheck monitor, mouse pairing, architecture, Options+/Deskflow versions and roles, GPU/cable path, and app overrides. Record only relevant evidence.
-2. Implement and run read-only discovery. Select the exact device path and EDID hash. Explicit enrollment must validate SAM/SAM1017 and unique association. Never copy the example config as valid enrollment.
-3. Tell the owner before a physical test. Have the monitor's physical input control available and record the original input. Test explicit switch/readback plus owner-confirmed images.
-4. Prove restoration from a new process after every old physical handle has been disposed while the laptop image is selected.
-5. Show the actual LIFT button diagram and existing assignment. Propose Forward; confirm selection before changing it. Save screenshot/plain text and supported export if available. Save evidence outside Git.
-6. Through supported Options+ UI, temporarily assign the dedicated probe in All Applications. Inspect actual Open Application/Open File or Smart Action options. Do not silently create/sign into an account or modify private databases.
-7. Run ten separated presses in every design matrix state, desktop/browser/editor checks, rapid presses, and long hold. Verify no duplicate launch, repeat while held, Back/Forward forwarding, or focus change.
-8. Only after the probe gate passes, bind the real implemented executable and repeat lifecycle checks while it verifies/is busy. Record native and visual results separately.
-9. Install only the tested complete package to the approved stable per-user directory. Retain one prior package/config on update. Preserve enrollment and the button choice.
+## 6. Bind the real switch
 
-The physical monitor input button is the recovery path. Never perform blind automatic rollback. If a native call hangs, keep the writer isolated; manual termination leaves an uncertain outcome, which the completed implementation must reconcile on the next invocation without toggling.
+Only after the probe gate passes, replace the probe with the absolute path of `MonitorSwitch.exe` (no arguments). Repeat lifecycle checks while it verifies or is busy, then ten complete round trips. Record native and visual results separately in [acceptance](ACCEPTANCE.md).
+
+Install only the tested complete package to the approved stable per-user directory (`%LOCALAPPDATA%\MonitorSwitch\bin`). Update only with no operation active, keeping one prior package/config.
+
+## Recovery
+
+The physical monitor input button always works. Never perform blind automatic rollback. If a native call hangs, the process keeps the lock; terminating it leaves a pending record that the next launch reconciles read-only (exit 16 or 15) without switching. Press again after a reconciliation to switch.
 
 ## Screenshots to capture during actual setup
 
@@ -46,5 +97,3 @@ The physical monitor input button is the recovery path. Never perform blind auto
 - Selected supported Options+ action and absolute executable path.
 - Relevant All Applications/app-specific override settings.
 - Supported backup/export and restore controls, if present.
-
-No screenshots or Windows observations have been fabricated for this scaffold. See [acceptance](ACCEPTANCE.md) for pending gates and [rollback](ROLLBACK.md) for removal.

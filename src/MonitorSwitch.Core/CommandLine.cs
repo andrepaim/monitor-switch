@@ -65,13 +65,10 @@ public static class CommandLine
         if (kind == CommandKind.Enroll && (!options.ContainsKey("--device-path") || !options.ContainsKey("--edid-hash")))
             throw new ArgumentException("Enrollment requires device path and EDID hash.");
         // SHA-256 as 64 lowercase hex characters, exactly as discovery reports it.
-        if (kind == CommandKind.Enroll && !IsSha256Hex(options["--edid-hash"]!))
+        if (kind == CommandKind.Enroll && !Edid.IsIdentityHash(options["--edid-hash"]!))
             throw new ArgumentException("EDID hash must be 64 lowercase hex characters.");
 
         return new(kind, input, options.ContainsKey("--dry-run"), options.GetValueOrDefault("--output"),
             options.GetValueOrDefault("--device-path"), options.GetValueOrDefault("--edid-hash"), options.ContainsKey("--replace"));
     }
-
-    private static bool IsSha256Hex(string value) =>
-        value.Length == 64 && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
 }
