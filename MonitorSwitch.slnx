@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MonitorSwitch/MonitorSwitch.csproj" />
+    <Project Path="src/MonitorSwitch.Core/MonitorSwitch.Core.csproj" />
+    <Project Path="src/MonitorSwitch.Windows/MonitorSwitch.Windows.csproj" />
+    <Project Path="src/MonitorSwitch.Runtime/MonitorSwitch.Runtime.csproj" />
+    <Project Path="src/MonitorSwitch.TriggerProbe/MonitorSwitch.TriggerProbe.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MonitorSwitch.Tests/MonitorSwitch.Tests.csproj" />
+  </Folder>
+</Solution>

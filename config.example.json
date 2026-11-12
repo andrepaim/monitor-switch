@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "monitor": {
+    "manufacturer": "SAM",
+    "productId": "SAM1017",
+    "friendlyName": "LU28R55",
+    "deviceInterfacePath": "<captured during explicit enrollment>",
+    "edidIdentityHash": "<sha256 of complete validated raw EDID>",
+    "requireUniqueMatch": true
+  },
+  "input": {
+    "vcpCode": 96,
+    "allowedValues": [5, 6],
+    "labels": { "5": "Input 5", "6": "Input 6" }
+  },
+  "operation": {
+    "cooldownMs": 1500,
+    "readAttempts": 3,
+    "verificationDeadlineMs": 8000
+  },
+  "feedback": {
+    "successSound": false,
+    "errorSound": true
+  }
+}
