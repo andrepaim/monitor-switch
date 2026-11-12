@@ -7,11 +7,14 @@ namespace MonitorSwitch.Runtime;
 /// <summary>Harmless trigger evidence only. No monitor, enrollment or operation state access.</summary>
 public static class ProbeRecorder
 {
-    public static int Record()
+    public static int Record() => Record(AppPaths.ProbeLog);
+
+    // Explicit path lets hardware-free tests use a temporary directory.
+    public static int Record(string logPath)
     {
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(AppPaths.ProbeLog)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
             var entry = JsonSerializer.Serialize(new
             {
                 timestampUtc = DateTimeOffset.UtcNow,
@@ -26,7 +29,7 @@ public static class ProbeRecorder
             {
                 try
                 {
-                    using var stream = new FileStream(AppPaths.ProbeLog, FileMode.Append, FileAccess.Write, FileShare.Read);
+                    using var stream = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.Read);
                     stream.Write(Encoding.UTF8.GetBytes(entry));
                     stream.Flush(flushToDisk: true);
                     return ExitCodes.Success;

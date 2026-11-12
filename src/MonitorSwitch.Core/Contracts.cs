@@ -8,8 +8,9 @@ public sealed record SwitchResult(string OperationId, string Outcome,
 public sealed record PendingOperation(string OperationId, MonitorIdentity Identity,
     string Command, uint Before, uint Target, DateTimeOffset StartedAtUtc);
 public sealed record CooldownStamp(string BootIdentity, long MonotonicMilliseconds);
-public sealed record OperationState(int SchemaVersion, PendingOperation? Pending,
-    SwitchResult? LastCompleted, CooldownStamp? LastCompletion);
+// EnrolledIdentity binds the state to one enrollment; a mismatch with config fails closed.
+public sealed record OperationState(int SchemaVersion, MonitorIdentity EnrolledIdentity,
+    PendingOperation? Pending, SwitchResult? LastCompleted, CooldownStamp? LastCompletion);
 
 public static class ExitCodes
 {

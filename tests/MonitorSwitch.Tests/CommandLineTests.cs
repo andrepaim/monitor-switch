@@ -56,6 +56,14 @@ public sealed class CommandLineTests
     public void RequiredArgumentsAreEnforced(string command) =>
         Assert.Throws<ArgumentException>(() => CommandLine.Parse([command]));
 
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
+    [InlineData("gaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+    public void EnrollmentRequiresLowercaseSha256Hex(string hash) =>
+        Assert.Throws<ArgumentException>(() => CommandLine.Parse(["enroll", "--device-path", "device", "--edid-hash", hash]));
+
     [Fact]
     public void EnrollmentDoesNotImplyReplacement()
     {

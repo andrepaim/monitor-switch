@@ -154,7 +154,7 @@ All commands using native monitor access coordinate through the same nonblocking
 
 The lock must cover every process that can access the same per-user state. A `Local\MonitorSwitch-<user-id-hash>` mutex is session scoped: enforce one participating interactive session or use a reviewed cross-session lock. An abandoned lock requires reading durable state before any new write. Named mutex ownership is thread-affine; do not release from an unrelated continuation thread.
 
-`state.json` is the single authoritative atomic document: schema, enrolled identity fingerprint, pending operation, last completed outcome, and boot-aware monotonic cooldown metadata. Logs and last-result are derived reports, not recovery authority. Missing state at first use is allowed; corrupt existing state fails closed. A reboot/clock correction must not create infinite cooldown. Pending state survives reboot and app restart.
+`state.json` is the single authoritative atomic document: schema, enrolled identity (device path and EDID hash, matching config; a mismatch fails closed), pending operation, last completed outcome, and boot-aware monotonic cooldown metadata. Logs and last-result are derived reports, not recovery authority. Missing state at first use is allowed; corrupt existing state fails closed. A reboot/clock correction must not create infinite cooldown. Pending state survives reboot and app restart.
 
 1. Validate command/config. Acquire lock without waiting.
 2. Load authoritative state. If pending exists, perform read-only reconciliation and return without switching. Target or original readback resolves it; unreadable or unexpected values retain pending and fail closed.
@@ -278,12 +278,13 @@ dotnet restore MonitorSwitch.slnx
 dotnet build MonitorSwitch.slnx -c Release --no-restore
 dotnet test MonitorSwitch.slnx -c Release --no-build
 dotnet publish .\src\MonitorSwitch\MonitorSwitch.csproj `
-  -c Release -r win-x64 --self-contained true `
-  -p:PublishSingleFile=true -o .\artifacts\win-x64
-Get-FileHash .\artifacts\win-x64\MonitorSwitch.exe -Algorithm SHA256
+  -c Release -r win-x64 --self-contained true -o .\artifacts\win-x64\app
+dotnet publish .\src\MonitorSwitch.TriggerProbe\MonitorSwitch.TriggerProbe.csproj `
+  -c Release -r win-x64 --self-contained true -o .\artifacts\win-x64\probe
+# Or: .\scripts\Publish.ps1 -Runtime win-x64 (also writes per-folder SHA-256 manifests)
 ```
 
-Publish the probe separately to avoid output collisions. Run published read-only diagnostics on Windows before binding. Hardware tests are explicit manual integration checks, never ordinary CI. Scaffolding scripts must not install, enroll, bind, or switch inputs.
+Each output is a self-contained folder; hash and deploy the whole folder, not only the apphost. Single-file packaging is optional future work (§9). Publish the probe separately to avoid output collisions. Run published read-only diagnostics on Windows before binding. Hardware tests are explicit manual integration checks, never ordinary CI. Scaffolding scripts must not install, enroll, bind, or switch inputs.
 
 ## 13. Instructions for implementation
 
